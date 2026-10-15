@@ -1,0 +1,46 @@
+fide-law-texts:
+  type: Package
+  publisher: example.org
+  version: 1.0.0
+  label: FIDE Law Texts
+  comment: >-
+    Source provisions of the FIDE Laws of Chess, 2023 edition. Transcribed for
+    a demonstration; check each against the FIDE Handbook before relying on it.
+  imports:
+    - publisher: kanonak.org
+      packages:
+        - { package: core-rdf,   match: ^, version: 1.1.0, alias: rdfs }
+        - { package: provenance, match: ^, version: 1.0.0, alias: prov }
+    - publisher: example.org
+      packages:
+        - { package: rule-bases, match: ^, version: 1.0.0, alias: rb }
+
+laws-of-chess-2023:
+  type: prov.Source
+  rdfs.label: FIDE Laws of Chess (2023)
+  rdfs.comment: The FIDE Laws of Chess, applied from 1 January 2023.
+  prov.sourceUrl: https://handbook.fide.com/chapter/E012023
+  prov.sourceDate: '2023-01-01'
+
+art-7-5-5:
+  type: rb.Provision
+  rdfs.label: FIDE Laws art. 7.5.5
+  rb.partOf: laws-of-chess-2023
+  rb.inForceFrom: 2023-01-01
+  rb.provisionText: >-
+    After the action taken under Article 7.5.1, 7.5.2, 7.5.3 or 7.5.4 for the
+    first completed illegal move by a player, the arbiter shall give two
+    minutes extra time to his/her opponent; for the second completed illegal
+    move by the same player the arbiter shall declare the game lost by this
+    player. However, the game is drawn if the position is such that the
+    opponent cannot checkmate the player's king by any possible series of
+    legal moves.
+
+art-12-9-6:
+  type: rb.Provision
+  rdfs.label: FIDE Laws art. 12.9.6
+  rb.partOf: laws-of-chess-2023
+  rb.inForceFrom: 2023-01-01
+  rb.provisionText: >-
+    Options available to the arbiter concerning penalties: [...] declaring the
+    game to be lost by the offending player

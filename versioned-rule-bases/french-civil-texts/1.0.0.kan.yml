@@ -1,0 +1,63 @@
+french-civil-texts:
+  type: Package
+  publisher: example.org
+  version: 1.0.0
+  label: French Civil Texts
+  comment: >-
+    Source provisions of French civil law on prescription, each in the wording
+    of one edition. Transcribed for a demonstration; check each against
+    Légifrance before relying on it.
+  imports:
+    - publisher: kanonak.org
+      packages:
+        - { package: core-rdf,   match: ^, version: 1.1.0, alias: rdfs }
+        - { package: provenance, match: ^, version: 1.0.0, alias: prov }
+    - publisher: example.org
+      packages:
+        - { package: rule-bases, match: ^, version: 1.0.0, alias: rb }
+
+code-civil:
+  type: prov.Source
+  rdfs.label: Code civil
+  rdfs.comment: The French Civil Code, promulgated on 21 March 1804.
+  prov.sourceUrl: https://www.legifrance.gouv.fr/codes/texte_lc/LEGITEXT000006070721
+
+loi-2008-561:
+  type: prov.Source
+  rdfs.label: Loi n° 2008-561 du 17 juin 2008
+  rdfs.comment: The statute reforming prescription in civil matters, in force from 19 June 2008.
+  prov.sourceDate: '2008-06-17'
+
+art-2262-1804:
+  type: rb.Provision
+  rdfs.label: C. civ. art. 2262 (1804 wording)
+  rb.partOf: code-civil
+  rb.inForceFrom: 1804-03-21
+  rb.inForceUntil: 2008-06-18
+  rb.provisionText: >-
+    Toutes les actions, tant réelles que personnelles, sont prescrites par
+    trente ans, sans que celui qui allègue cette prescription soit obligé d'en
+    rapporter un titre, ou qu'on puisse lui opposer l'exception déduite de la
+    mauvaise foi.
+
+art-2224-2008:
+  type: rb.Provision
+  rdfs.label: C. civ. art. 2224 (2008 wording)
+  rb.partOf: code-civil
+  rb.inForceFrom: 2008-06-19
+  rb.replaces: art-2262-1804
+  rb.provisionText: >-
+    Les actions personnelles ou mobilières se prescrivent par cinq ans à
+    compter du jour où le titulaire d'un droit a connu ou aurait dû connaître
+    les faits lui permettant de l'exercer.
+
+art-26-ii-2008:
+  type: rb.Provision
+  rdfs.label: Loi n° 2008-561, art. 26-II
+  rb.partOf: loi-2008-561
+  rb.inForceFrom: 2008-06-19
+  rb.provisionText: >-
+    Les dispositions de la présente loi qui réduisent la durée de la
+    prescription s'appliquent aux prescriptions à compter du jour de l'entrée
+    en vigueur de la présente loi, sans que la durée totale puisse excéder la
+    durée prévue par la loi antérieure.

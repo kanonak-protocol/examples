@@ -1,0 +1,56 @@
+fide-cases:
+  type: Package
+  publisher: example.org
+  version: 1.0.0
+  label: FIDE Cases
+  comment: >-
+    The chess example from the r/semanticweb thread: a second illegal move, then
+    the same with the fact that the opponent cannot mate.
+  imports:
+    - publisher: kanonak.org
+      packages:
+        - { package: core-rdf, match: ^, version: 1.1.0, alias: rdfs }
+    - publisher: example.org
+      packages:
+        - { package: rule-bases, match: ^, version: 1.0.0, alias: rb }
+        - { package: fide-rules, match: ^, version: 1.0.0, alias: fr }
+
+second-illegal-move-game:
+  type: rb.Case
+  rdfs.label: A second illegal move
+  rb.establishes: [ fr.second-illegal-move ]
+
+second-illegal-move-no-mate-game:
+  type: rb.Case
+  rdfs.label: A second illegal move, opponent cannot mate
+  rb.establishes: [ fr.second-illegal-move, fr.opponent-cannot-mate ]
+
+lost-after-second-illegal-move:
+  type: rb.Question
+  rdfs.label: Lost?
+  rb.about: second-illegal-move-game
+  rb.asks: fr.game-lost-by-offender
+  rb.asOf: 2024-05-01
+  rb.expectedAnswer: rb.supported
+  rb.expectedGrounds: [ fr.second-illegal-move-loses ]
+
+drawn-when-no-mate-possible:
+  type: rb.Question
+  rdfs.label: Drawn, when the opponent cannot mate?
+  rb.about: second-illegal-move-no-mate-game
+  rb.asks: fr.game-drawn
+  rb.asOf: 2024-05-01
+  rb.expectedAnswer: rb.supported
+  rb.expectedGrounds: [ fr.no-possible-mate-draws ]
+
+lost-when-no-mate-possible:
+  type: rb.Question
+  rdfs.label: Lost, when the opponent cannot mate?
+  rdfs.comment: >-
+    The automatic loss is defeated by the exception, but the arbiter's penalty
+    remains open, so the answer is the arbiter's call rather than refuted.
+  rb.about: second-illegal-move-no-mate-game
+  rb.asks: fr.game-lost-by-offender
+  rb.asOf: 2024-05-01
+  rb.expectedAnswer: rb.needs-judgment
+  rb.expectedGrounds: [ fr.arbiter-may-declare-loss ]

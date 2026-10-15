@@ -1,0 +1,101 @@
+fide-rules:
+  type: Package
+  publisher: example.org
+  version: 1.0.0
+  label: FIDE Rules
+  comment: >-
+    A rule base for the outcome of a game after a second illegal move, under
+    the 2023 FIDE Laws of Chess. Shows a defeasible loss, the exception that
+    defeats it, and a penalty the Laws leave to the arbiter.
+  imports:
+    - publisher: kanonak.org
+      packages:
+        - { package: core-rdf, match: ^, version: 1.1.0, alias: rdfs }
+        - { package: core-owl, match: ^, version: 2.2.0, alias: owl }
+    - publisher: example.org
+      packages:
+        - { package: rule-bases,    match: ^,   version: 1.0.0, alias: rb }
+        - { package: fide-law-texts, match: '=', version: 1.0.0, alias: txt }
+
+ChessProposition:
+  type: rdfs.Class
+  rdfs.subClassOf: rb.Proposition
+  owl.oneOf: [ second-illegal-move, opponent-cannot-mate, game-lost-by-offender, game-drawn ]
+  rdfs.label: Chess Proposition
+
+second-illegal-move:
+  type: ChessProposition
+  rdfs.label: Second illegal move
+  rdfs.comment: The offending player has completed a second illegal move in the game.
+
+opponent-cannot-mate:
+  type: ChessProposition
+  rdfs.label: Opponent cannot mate
+  rdfs.comment: The offender's opponent cannot checkmate them by any possible series of legal moves.
+
+game-lost-by-offender:
+  type: ChessProposition
+  rdfs.label: Lost by the offender
+
+game-drawn:
+  type: ChessProposition
+  rdfs.label: Drawn
+
+ChessAuthority:
+  type: rdfs.Class
+  rdfs.subClassOf: rb.Authority
+  owl.oneOf: [ arbiter ]
+  rdfs.label: Chess Authority
+
+arbiter:
+  type: ChessAuthority
+  rdfs.label: Arbiter
+
+FideRule:
+  type: rdfs.Class
+  rdfs.subClassOf: rb.Rule
+  owl.oneOf: [ second-illegal-move-loses, no-possible-mate-draws, no-possible-mate-not-lost, arbiter-may-declare-loss ]
+  rdfs.label: FIDE Rule
+  rdfs.comment: The closed set of rules in this rule base.
+
+second-illegal-move-loses:
+  type: FideRule
+  rdfs.label: A second illegal move loses
+  rb.basedOn: txt.art-7-5-5
+  rb.strength: rb.defeasible
+  rb.premise: [ second-illegal-move ]
+  rb.conclusion: game-lost-by-offender
+  rb.polarity: rb.affirms
+
+no-possible-mate-draws:
+  type: FideRule
+  rdfs.label: Drawn if the opponent cannot mate
+  rb.basedOn: txt.art-7-5-5
+  rb.strength: rb.defeasible
+  rb.premise: [ second-illegal-move, opponent-cannot-mate ]
+  rb.conclusion: game-drawn
+  rb.polarity: rb.affirms
+
+no-possible-mate-not-lost:
+  type: FideRule
+  rdfs.label: Not lost if the opponent cannot mate
+  rb.basedOn: txt.art-7-5-5
+  rb.strength: rb.defeasible
+  rb.premise: [ second-illegal-move, opponent-cannot-mate ]
+  rb.conclusion: game-lost-by-offender
+  rb.polarity: rb.denies
+  rb.defeats: [ second-illegal-move-loses ]
+
+arbiter-may-declare-loss:
+  type: FideRule
+  rdfs.label: The arbiter may declare the game lost
+  rdfs.comment: >-
+    A penalty the arbiter may impose for the infraction. Because it is reserved
+    to the arbiter, it never decides the game by itself; it keeps a loss open
+    for the arbiter to decide.
+  rb.basedOn: txt.art-12-9-6
+  rb.strength: rb.defeasible
+  rb.premise: [ second-illegal-move ]
+  rb.conclusion: game-lost-by-offender
+  rb.polarity: rb.affirms
+  rb.reservedTo: arbiter

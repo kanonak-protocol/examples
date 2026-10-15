@@ -1,0 +1,366 @@
+rule-bases:
+  type: Package
+  publisher: example.org
+  version: 1.0.0
+  label: Rule Bases
+  comment: >-
+    The schema for a body of rules shipped as a versioned package: rules pinned
+    to the source provisions they model, strict and defeasible strengths with
+    explicit priorities, questions dated in legal time, and answers that are not
+    booleans. It describes rule bases; it does not evaluate them. An evaluator
+    reads these packages and produces the answers.
+  imports:
+    - publisher: kanonak.org
+      packages:
+        - { package: core-rdf,   match: ^, version: 1.1.0, alias: rdfs }
+        - { package: core-owl,   match: ^, version: 2.2.0, alias: owl }
+        - { package: core-xsd,   match: ^, version: 1.1.0, alias: xsd }
+        - { package: core-shacl, match: ^, version: 1.3.0, alias: sh }
+        - { package: provenance, match: ^, version: 1.0.0, alias: prov }
+
+Provision:
+  type: rdfs.Class
+  rdfs.label: Provision
+  rdfs.comment: >-
+    One citable fragment of a source text, in the wording of one edition. A new
+    wording is a new Provision, never an edit of an old one, so a rule that
+    cites a provision is pinned to the exact words it models.
+
+provisionText:
+  type: owl.DatatypeProperty
+  rdfs.domain: Provision
+  rdfs.range: xsd.string
+  rdfs.label: Text
+  rdfs.comment: The wording of the provision, verbatim, in its original language.
+
+partOf:
+  type: owl.ObjectProperty
+  rdfs.domain: Provision
+  rdfs.range: prov.Source
+  rdfs.label: Part Of
+  rdfs.comment: The source text this provision belongs to.
+
+inForceFrom:
+  type: owl.DatatypeProperty
+  rdfs.domain: Provision
+  rdfs.range: xsd.date
+  rdfs.label: In Force From
+  rdfs.comment: The first day this wording had legal effect.
+
+inForceUntil:
+  type: owl.DatatypeProperty
+  rdfs.domain: Provision
+  rdfs.range: xsd.date
+  rdfs.label: In Force Until
+  rdfs.comment: The last day this wording had legal effect. Absent while it is still in force.
+
+replaces:
+  type: owl.ObjectProperty
+  rdfs.domain: Provision
+  rdfs.range: Provision
+  rdfs.label: Replaces
+  rdfs.comment: The earlier provision whose role this one took over when it came into force.
+
+ProvisionShape:
+  type: sh.NodeShape
+  sh.targetClass: Provision
+  sh.property:
+    - { sh.path: provisionText, sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: partOf,        sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: inForceFrom,   sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: inForceUntil,  sh.maxCount: 1 }
+
+Proposition:
+  type: rdfs.Class
+  rdfs.label: Proposition
+  rdfs.comment: >-
+    An atomic claim about a case, which rules take as premises and draw as
+    conclusions. Each rule base declares its own propositions as a closed
+    enumeration.
+
+Authority:
+  type: rdfs.Class
+  rdfs.label: Authority
+  rdfs.comment: >-
+    Whoever decides a question the text leaves to judgment: a court, an
+    arbiter, a referee.
+
+RuleStrength:
+  type: rdfs.Class
+  owl.oneOf: [ strict, defeasible ]
+  rdfs.label: Rule Strength
+  rdfs.comment: Whether a rule's conclusion can be overturned by another rule.
+
+strict:
+  type: RuleStrength
+  rdfs.label: Strict
+  rdfs.comment: When its premises hold, its conclusion holds; no other rule can overturn it.
+
+defeasible:
+  type: RuleStrength
+  rdfs.label: Defeasible
+  rdfs.comment: Its conclusion holds unless a rule that defeats it also fires.
+
+Polarity:
+  type: rdfs.Class
+  owl.oneOf: [ affirms, denies ]
+  rdfs.label: Polarity
+  rdfs.comment: Whether a rule argues for its conclusion or against it.
+
+affirms:
+  type: Polarity
+  rdfs.label: Affirms
+  rdfs.comment: The rule supports its conclusion.
+
+denies:
+  type: Polarity
+  rdfs.label: Denies
+  rdfs.comment: The rule opposes its conclusion.
+
+Rule:
+  type: rdfs.Class
+  rdfs.label: Rule
+  rdfs.comment: >-
+    One rule of a rule base. It fires for a question when every premise is
+    established for the case, either given as fact or supported by another
+    rule, and the provision it is based on is in force on the question's date.
+    Each rule base declares its rules as a closed enumeration, so the set of
+    rules an answer was drawn from is explicit.
+
+basedOn:
+  type: owl.ObjectProperty
+  rdfs.domain: Rule
+  rdfs.range: Provision
+  rdfs.label: Based On
+  rdfs.comment: The provision this rule models. Its in-force dates decide when the rule can fire.
+
+strength:
+  type: owl.ObjectProperty
+  rdfs.domain: Rule
+  rdfs.range: RuleStrength
+  rdfs.label: Strength
+
+premise:
+  type: owl.ObjectProperty
+  rdfs.domain: Rule
+  rdfs.range: Proposition
+  rdfs.label: Premise
+  rdfs.comment: A proposition that must be established for the case before the rule fires.
+
+conclusion:
+  type: owl.ObjectProperty
+  rdfs.domain: Rule
+  rdfs.range: Proposition
+  rdfs.label: Conclusion
+  rdfs.comment: The proposition the rule speaks to, for or against according to its polarity.
+
+polarity:
+  type: owl.ObjectProperty
+  rdfs.domain: Rule
+  rdfs.range: Polarity
+  rdfs.label: Polarity
+
+defeats:
+  type: owl.ObjectProperty
+  rdfs.domain: Rule
+  rdfs.range: Rule
+  rdfs.label: Defeats
+  rdfs.comment: >-
+    Priority between rules. When this rule and the other both fire, this rule
+    prevails and the other's conclusion is set aside.
+
+reservedTo:
+  type: owl.ObjectProperty
+  rdfs.domain: Rule
+  rdfs.range: Authority
+  rdfs.label: Reserved To
+  rdfs.comment: >-
+    The authority whose call this rule's conclusion is. A reserved rule never
+    decides a question by itself; it marks the question as needing that
+    authority's judgment.
+
+RuleShape:
+  type: sh.NodeShape
+  sh.targetClass: Rule
+  sh.property:
+    - { sh.path: basedOn,    sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: strength,   sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: conclusion, sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: polarity,   sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: reservedTo, sh.maxCount: 1 }
+
+DeadlineRule:
+  type: rdfs.Class
+  rdfs.subClassOf: Rule
+  rdfs.label: Deadline Rule
+  rdfs.comment: >-
+    A rule decided by dates. It supports its conclusion when the case's
+    measuredAt date falls after the period has run from its runsFrom date, and
+    opposes it when the date falls within the period. The period's last day is
+    the day before the same date one period later, so five years from 19 June
+    2008 end on 18 June 2013. If either date is missing from the case, the rule
+    does not fire.
+
+period:
+  type: owl.DatatypeProperty
+  rdfs.domain: DeadlineRule
+  rdfs.range: xsd.duration
+  rdfs.label: Period
+
+runsFrom:
+  type: owl.ObjectProperty
+  rdfs.domain: DeadlineRule
+  rdfs.range: owl.DatatypeProperty
+  rdfs.label: Runs From
+  rdfs.comment: The date property of the case from which the period runs.
+
+measuredAt:
+  type: owl.ObjectProperty
+  rdfs.domain: DeadlineRule
+  rdfs.range: owl.DatatypeProperty
+  rdfs.label: Measured At
+  rdfs.comment: The date property of the case that is checked against the end of the period.
+
+DeadlineRuleShape:
+  type: sh.NodeShape
+  sh.targetClass: DeadlineRule
+  sh.property:
+    - { sh.path: period,     sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: runsFrom,   sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: measuredAt, sh.minCount: 1, sh.maxCount: 1 }
+
+PeriodTransition:
+  type: rdfs.Class
+  rdfs.subClassOf: Rule
+  rdfs.label: Period Transition
+  rdfs.comment: >-
+    The transition rule for a shortened period. It fires for a case whose
+    period under the prior rule was already running when the shortened rule's
+    provision came into force. The shorter period then runs from that
+    entry-into-force date, and the total may not exceed what the prior rule
+    allowed. The prior rule is read as a parameter, so it need not be in force
+    on the question's date.
+
+shortenedRule:
+  type: owl.ObjectProperty
+  rdfs.domain: PeriodTransition
+  rdfs.range: DeadlineRule
+  rdfs.label: Shortened Rule
+  rdfs.comment: The new rule whose shorter period is being phased in.
+
+priorRule:
+  type: owl.ObjectProperty
+  rdfs.domain: PeriodTransition
+  rdfs.range: DeadlineRule
+  rdfs.label: Prior Rule
+  rdfs.comment: The old rule whose period caps the total.
+
+PeriodTransitionShape:
+  type: sh.NodeShape
+  sh.targetClass: PeriodTransition
+  sh.property:
+    - { sh.path: shortenedRule, sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: priorRule,     sh.minCount: 1, sh.maxCount: 1 }
+
+Case:
+  type: rdfs.Class
+  rdfs.label: Case
+  rdfs.comment: The facts of one situation, as given to an evaluator.
+
+establishes:
+  type: owl.ObjectProperty
+  rdfs.domain: Case
+  rdfs.range: Proposition
+  rdfs.label: Establishes
+  rdfs.comment: A proposition given as fact for this case.
+
+Answer:
+  type: rdfs.Class
+  owl.oneOf: [ supported, refuted, both, neither, needs-judgment ]
+  rdfs.label: Answer
+  rdfs.comment: The outcome of asking whether a proposition holds. Never a bare boolean.
+
+supported:
+  type: Answer
+  rdfs.label: Supported
+  rdfs.comment: >-
+    Undefeated unreserved rules support the proposition, none oppose it, and no
+    reserved rule argues otherwise.
+
+refuted:
+  type: Answer
+  rdfs.label: Refuted
+  rdfs.comment: >-
+    Undefeated unreserved rules oppose the proposition, none support it, and no
+    reserved rule argues otherwise.
+
+both:
+  type: Answer
+  rdfs.label: Both
+  rdfs.comment: >-
+    Undefeated unreserved rules both support and oppose the proposition, no
+    priority settles it, and no reserved rule bears on it.
+
+neither:
+  type: Answer
+  rdfs.label: Neither
+  rdfs.comment: No rule that fired bears on the proposition, including when a fact a rule needs is missing.
+
+needs-judgment:
+  type: Answer
+  rdfs.label: Needs Judgment
+  rdfs.comment: >-
+    An undefeated rule reserved to an authority fired and argues against what
+    the unreserved rules give, or they give nothing settled. The text leaves
+    the call to that authority.
+
+Question:
+  type: rdfs.Class
+  rdfs.label: Question
+  rdfs.comment: >-
+    Whether a proposition holds for a case on a legal date. The date picks
+    which provisions are in force, and so which rules can fire.
+
+about:
+  type: owl.ObjectProperty
+  rdfs.domain: Question
+  rdfs.range: Case
+  rdfs.label: About
+
+asks:
+  type: owl.ObjectProperty
+  rdfs.domain: Question
+  rdfs.range: Proposition
+  rdfs.label: Asks
+
+asOf:
+  type: owl.DatatypeProperty
+  rdfs.domain: Question
+  rdfs.range: xsd.date
+  rdfs.label: As Of
+  rdfs.comment: The legal date of the question. It selects the edition of every source cited.
+
+expectedAnswer:
+  type: owl.ObjectProperty
+  rdfs.domain: Question
+  rdfs.range: Answer
+  rdfs.label: Expected Answer
+  rdfs.comment: >-
+    The answer a conforming evaluator must return. A hand-authored test vector,
+    not a computed result.
+
+expectedGrounds:
+  type: owl.ObjectProperty
+  rdfs.domain: Question
+  rdfs.range: Rule
+  rdfs.label: Expected Grounds
+  rdfs.comment: The rules a conforming evaluator must report as deciding the answer.
+
+QuestionShape:
+  type: sh.NodeShape
+  sh.targetClass: Question
+  sh.property:
+    - { sh.path: about,          sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: asks,           sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: asOf,           sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: expectedAnswer, sh.maxCount: 1 }

@@ -1,0 +1,105 @@
+prescription-rules:
+  type: Package
+  publisher: example.org
+  version: 1.0.0
+  label: Prescription Rules
+  comment: >-
+    A rule base for whether a civil claim is time-barred under French law,
+    across the 1804 wording of the Civil Code and the 2008 reform with its
+    transition rule. Each rule is pinned to the exact provision it models, and
+    the source texts are imported at one exact version.
+  imports:
+    - publisher: kanonak.org
+      packages:
+        - { package: core-rdf,   match: ^, version: 1.1.0, alias: rdfs }
+        - { package: core-owl,   match: ^, version: 2.2.0, alias: owl }
+        - { package: core-xsd,   match: ^, version: 1.1.0, alias: xsd }
+        - { package: core-shacl, match: ^, version: 1.3.0, alias: sh }
+    - publisher: example.org
+      packages:
+        - { package: rule-bases,         match: ^,   version: 1.0.0, alias: rb }
+        - { package: french-civil-texts, match: '=', version: 1.0.0, alias: txt }
+
+Claim:
+  type: rdfs.Class
+  rdfs.subClassOf: rb.Case
+  rdfs.label: Claim
+  rdfs.comment: A personal claim, such as an unpaid debt, whose enforcement may be time-barred.
+
+becameDue:
+  type: owl.DatatypeProperty
+  rdfs.domain: Claim
+  rdfs.range: xsd.date
+  rdfs.label: Became Due
+  rdfs.comment: >-
+    The day the claim became enforceable, taken here as the day the creditor
+    knew or should have known the facts that let them act on it.
+
+actionBroughtOn:
+  type: owl.DatatypeProperty
+  rdfs.domain: Claim
+  rdfs.range: xsd.date
+  rdfs.label: Action Brought On
+  rdfs.comment: The day the creditor sued.
+
+ClaimShape:
+  type: sh.NodeShape
+  sh.targetClass: Claim
+  sh.property:
+    - { sh.path: becameDue,       sh.maxCount: 1 }
+    - { sh.path: actionBroughtOn, sh.maxCount: 1 }
+
+PrescriptionProposition:
+  type: rdfs.Class
+  rdfs.subClassOf: rb.Proposition
+  owl.oneOf: [ time-barred ]
+  rdfs.label: Prescription Proposition
+
+time-barred:
+  type: PrescriptionProposition
+  rdfs.label: Time-barred
+  rdfs.comment: The limitation period ran out before the action was brought, so the claim can no longer be enforced.
+
+PrescriptionRule:
+  type: rdfs.Class
+  rdfs.subClassOf: rb.Rule
+  owl.oneOf: [ thirty-year-period, five-year-period, reduced-period-transition ]
+  rdfs.label: Prescription Rule
+  rdfs.comment: The closed set of rules in this rule base.
+
+thirty-year-period:
+  type: [ PrescriptionRule, rb.DeadlineRule ]
+  rdfs.label: Thirty-year prescription (1804)
+  rb.basedOn: txt.art-2262-1804
+  rb.strength: rb.defeasible
+  rb.conclusion: time-barred
+  rb.polarity: rb.affirms
+  rb.period: P30Y
+  rb.runsFrom: becameDue
+  rb.measuredAt: actionBroughtOn
+
+five-year-period:
+  type: [ PrescriptionRule, rb.DeadlineRule ]
+  rdfs.label: Five-year prescription (2008)
+  rb.basedOn: txt.art-2224-2008
+  rb.strength: rb.defeasible
+  rb.conclusion: time-barred
+  rb.polarity: rb.affirms
+  rb.period: P5Y
+  rb.runsFrom: becameDue
+  rb.measuredAt: actionBroughtOn
+
+reduced-period-transition:
+  type: [ PrescriptionRule, rb.PeriodTransition ]
+  rdfs.label: Transition to the five-year period (2008)
+  rdfs.comment: >-
+    For a claim already running on 19 June 2008, the five years run from that
+    day, capped at the thirty years the 1804 text allowed. It takes priority
+    over a naive application of the five-year rule to such claims.
+  rb.basedOn: txt.art-26-ii-2008
+  rb.strength: rb.defeasible
+  rb.conclusion: time-barred
+  rb.polarity: rb.affirms
+  rb.shortenedRule: five-year-period
+  rb.priorRule: thirty-year-period
+  rb.defeats: [ five-year-period ]

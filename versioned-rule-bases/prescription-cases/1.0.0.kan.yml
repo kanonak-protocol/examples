@@ -1,0 +1,81 @@
+prescription-cases:
+  type: Package
+  publisher: example.org
+  version: 1.0.0
+  label: Prescription Cases
+  comment: >-
+    The debt example from the r/semanticweb thread: one set of facts, asked on
+    two legal dates, giving two answers with their grounds.
+  imports:
+    - publisher: kanonak.org
+      packages:
+        - { package: core-rdf, match: ^, version: 1.1.0, alias: rdfs }
+    - publisher: example.org
+      packages:
+        - { package: rule-bases,         match: ^, version: 1.0.0, alias: rb }
+        - { package: prescription-rules, match: ^, version: 1.0.0, alias: pr }
+
+debt-due-2000:
+  type: pr.Claim
+  rdfs.label: Debt due in 2000, sued on in 2015
+  pr.becameDue: 2000-06-01
+  pr.actionBroughtOn: 2015-06-01
+
+under-the-1804-text:
+  type: rb.Question
+  rdfs.label: Time-barred under the 1804 text?
+  rdfs.comment: >-
+    Dated on the last day the 1804 wording was in force, so only the
+    thirty-year rule can fire. The period ends in 2030, after the 2015 suit.
+  rb.about: debt-due-2000
+  rb.asks: pr.time-barred
+  rb.asOf: 2008-06-18
+  rb.expectedAnswer: rb.refuted
+  rb.expectedGrounds: [ pr.thirty-year-period ]
+
+under-the-current-text:
+  type: rb.Question
+  rdfs.label: Time-barred under the current text?
+  rdfs.comment: >-
+    Dated the day of the suit. The five-year rule and the transition both fire;
+    the transition prevails, running five years from 19 June 2008 and ending in
+    June 2013, before the suit.
+  rb.about: debt-due-2000
+  rb.asks: pr.time-barred
+  rb.asOf: 2015-06-01
+  rb.expectedAnswer: rb.supported
+  rb.expectedGrounds: [ pr.reduced-period-transition ]
+
+debt-due-2007:
+  type: pr.Claim
+  rdfs.label: Debt due in 2007, sued on in January 2013
+  pr.becameDue: 2007-03-01
+  pr.actionBroughtOn: 2013-01-15
+
+priority-decides:
+  type: rb.Question
+  rdfs.label: Time-barred, when the five-year rule alone would say yes?
+  rdfs.comment: >-
+    Five years from the due date ended in February 2012, before the suit, so
+    the five-year rule supports a bar. The transition runs the five years from
+    19 June 2008 instead, ending on 18 June 2013, after the suit, and it
+    defeats the five-year rule.
+  rb.about: debt-due-2007
+  rb.asks: pr.time-barred
+  rb.asOf: 2013-01-15
+  rb.expectedAnswer: rb.refuted
+  rb.expectedGrounds: [ pr.reduced-period-transition ]
+
+debt-due-2000-suit-date-unknown:
+  type: pr.Claim
+  rdfs.label: Debt due in 2000, suit date unknown
+  pr.becameDue: 2000-06-01
+
+missing-fact:
+  type: rb.Question
+  rdfs.label: Time-barred, when the suit date is unknown?
+  rdfs.comment: No deadline rule can fire without the suit date, so nothing bears on the question.
+  rb.about: debt-due-2000-suit-date-unknown
+  rb.asks: pr.time-barred
+  rb.asOf: 2015-06-01
+  rb.expectedAnswer: rb.neither
