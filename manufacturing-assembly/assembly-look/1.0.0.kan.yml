@@ -1,0 +1,97 @@
+assembly-look:
+  type: Package
+  publisher: example.org
+  version: 1.0.0
+  label: Assembly Look
+  comment: >-
+    How the assembly schema renders as pages. A process shows its steps as a
+    diagram in the order each leads to the next. A step shows what it does,
+    how long it takes, and the tools and components it needs. A tool, a
+    component and a product each list the steps that use them. Every page
+    links to the next.
+  imports:
+    - publisher: kanonak.org
+      packages:
+        - { package: core-kanonak, match: ^, version: 2.4.0 }
+        - { package: core-rdf,     match: ^, version: 1.2.0, alias: rdfs }
+        - { package: derivation,   match: ^, version: 1.3.0, alias: derivation }
+        - { package: look,         match: ^, version: 2.6.0, alias: look }
+    - publisher: example.org
+      packages:
+        - { package: assembly, match: ^, version: 1.0.0, alias: asm }
+
+asm.assembly:
+  derivation.look:
+    type: look.PackageView
+    look.bands:
+      - type: look.Hero
+        look.title: rdfs.label
+        look.subtitle: rdfs.comment
+      - type: look.EntityRelationship
+      - type: look.PackageContents
+
+asm.AssemblyProcess:
+  derivation.look:
+    type: look.ResourceView
+    look.bands:
+      - type: look.Hero
+        look.eyebrow: rdfs.type
+        look.title: rdfs.label
+        look.subtitle: rdfs.comment
+      - type: look.Diagram
+        look.figureTitle: Steps, each leading to the next
+        look.facets:
+          - look.relation: asm.hasStep
+            look.encode: look.connector
+            look.edges: asm.leadsTo
+      - type: look.ReferenceList
+        look.entries: [ asm.produces, asm.hasStep ]
+
+asm.Step:
+  derivation.look:
+    type: look.ResourceView
+    look.bands:
+      - type: look.Hero
+        look.eyebrow: rdfs.type
+        look.title: rdfs.label
+        look.subtitle: rdfs.comment
+      - type: look.ChipRow
+        look.chips: [ asm.performs, asm.estimatedMinutes ]
+      - type: look.ReferenceList
+        look.entries: [ asm.usesTool, asm.consumes, asm.leadsTo ]
+      - type: look.ReferencedBy
+
+asm.Tool:
+  derivation.look:
+    type: look.ResourceView
+    look.bands:
+      - type: look.Hero
+        look.eyebrow: rdfs.type
+        look.title: rdfs.label
+        look.subtitle: rdfs.comment
+      - type: look.ReferencedBy
+        look.via: asm.usesTool
+
+asm.Component:
+  derivation.look:
+    type: look.ResourceView
+    look.bands:
+      - type: look.Hero
+        look.eyebrow: rdfs.type
+        look.title: rdfs.label
+        look.subtitle: rdfs.comment
+      - type: look.ChipRow
+        look.chips: [ asm.partNumber ]
+      - type: look.ReferencedBy
+        look.via: asm.consumes
+
+asm.Product:
+  derivation.look:
+    type: look.ResourceView
+    look.bands:
+      - type: look.Hero
+        look.eyebrow: rdfs.type
+        look.title: rdfs.label
+        look.subtitle: rdfs.comment
+      - type: look.ReferencedBy
+        look.via: asm.produces

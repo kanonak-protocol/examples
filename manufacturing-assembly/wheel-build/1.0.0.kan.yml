@@ -1,0 +1,214 @@
+wheel-build:
+  type: Package
+  publisher: example.org
+  version: 1.0.0
+  label: Wheel Build
+  comment: >-
+    Data: how a workshop builds a 32-spoke front bicycle wheel, from a bare hub
+    and rim to an inflated, inspected wheel. It's a sample process for the
+    assembly schema, to read beside your own.
+  imports:
+    - publisher: kanonak.org
+      packages:
+        - { package: core-kanonak, match: ^, version: 2.4.0 }
+        - { package: core-rdf,     match: ^, version: 1.2.0 }
+    - publisher: example.org
+      packages:
+        - { package: assembly, match: ^, version: 1.0.0, alias: asm }
+
+front-wheel-build:
+  type: asm.AssemblyProcess
+  label: Front Wheel Build
+  comment: >-
+    Lacing, tensioning and truing a 32-spoke front wheel, then fitting its
+    tire. About two and a half hours for a trained builder.
+  asm.produces: front-wheel
+  asm.hasStep:
+    - lace-spokes
+    - bring-up-tension
+    - true-and-dish
+    - stress-relieve
+    - final-true
+    - check-spoke-tension
+    - fit-rim-tape
+    - mount-tire
+    - inflate
+    - final-inspection
+
+front-wheel:
+  type: asm.Product
+  label: Front Wheel
+  comment: A 32-spoke front wheel with its tire fitted and inflated, ready to go on a fork.
+
+# Steps, in the order leadsTo gives them.
+
+lace-spokes:
+  type: asm.Step
+  label: Lace Spokes
+  comment: Thread each spoke through the hub flange and into the rim in a three-cross pattern, and start a nipple on each.
+  asm.performs: asm.fit
+  asm.consumes: [ front-hub, rim, spoke, nipple ]
+  asm.usesTool: nipple-driver
+  asm.estimatedMinutes: 40
+  asm.leadsTo: bring-up-tension
+
+bring-up-tension:
+  type: asm.Step
+  label: Bring Up Tension
+  comment: Turn every nipple the same number of turns, around the wheel, until all the spokes are snug.
+  asm.performs: asm.tension
+  asm.usesTool: spoke-wrench
+  asm.estimatedMinutes: 20
+  asm.leadsTo: true-and-dish
+
+true-and-dish:
+  type: asm.Step
+  label: True and Dish
+  comment: Remove side-to-side and up-and-down wobble, and center the rim between the hub's locknuts.
+  asm.performs: asm.adjust
+  asm.usesTool: [ spoke-wrench, truing-stand, dishing-tool ]
+  asm.estimatedMinutes: 30
+  asm.leadsTo: stress-relieve
+
+stress-relieve:
+  type: asm.Step
+  label: Stress-Relieve
+  comment: Squeeze parallel pairs of spokes by hand, so the spokes settle now rather than on the first ride.
+  asm.performs: asm.tension
+  asm.estimatedMinutes: 5
+  asm.leadsTo: final-true
+
+final-true:
+  type: asm.Step
+  label: Final True
+  comment: True and dish the wheel again, to within half a millimetre.
+  asm.performs: asm.adjust
+  asm.usesTool: [ spoke-wrench, truing-stand, dishing-tool ]
+  asm.estimatedMinutes: 15
+  asm.leadsTo: [ check-spoke-tension, fit-rim-tape ]
+
+check-spoke-tension:
+  type: asm.Step
+  label: Check Spoke Tension
+  comment: Measure every spoke, and check each is within ten percent of the average on its side.
+  asm.performs: asm.inspect
+  asm.usesTool: tension-meter
+  asm.estimatedMinutes: 10
+  asm.leadsTo: mount-tire
+
+fit-rim-tape:
+  type: asm.Step
+  label: Fit Rim Tape
+  comment: Cover the spoke holes in the rim bed, so no nipple can puncture the tube.
+  asm.performs: asm.fit
+  asm.consumes: rim-tape
+  asm.estimatedMinutes: 5
+  asm.leadsTo: mount-tire
+
+mount-tire:
+  type: asm.Step
+  label: Mount Tire
+  comment: Seat one bead, fit the tube, then seat the second bead without pinching the tube.
+  asm.performs: asm.fit
+  asm.consumes: [ inner-tube, tire ]
+  asm.usesTool: tire-levers
+  asm.estimatedMinutes: 10
+  asm.leadsTo: inflate
+
+inflate:
+  type: asm.Step
+  label: Inflate
+  comment: Inflate to the pressure printed on the tire's sidewall.
+  asm.performs: asm.tension
+  asm.usesTool: floor-pump
+  asm.estimatedMinutes: 3
+  asm.leadsTo: final-inspection
+
+final-inspection:
+  type: asm.Step
+  label: Final Inspection
+  comment: Spin the wheel in the stand, and check the tire is seated evenly and the rim runs true.
+  asm.performs: asm.inspect
+  asm.usesTool: truing-stand
+  asm.estimatedMinutes: 5
+
+# Components the steps consume.
+
+front-hub:
+  type: asm.Component
+  label: Front Hub
+  comment: A 32-hole front hub, 100 mm between its locknuts.
+  asm.partNumber: HUB-F-100-32H
+
+rim:
+  type: asm.Component
+  label: Rim
+  comment: A 622 mm aluminium rim with 32 spoke holes.
+  asm.partNumber: RIM-622-32H
+
+spoke:
+  type: asm.Component
+  label: Spoke
+  comment: A 292 mm double-butted stainless steel spoke. The wheel takes 32.
+  asm.partNumber: SPK-292-DB
+
+nipple:
+  type: asm.Component
+  label: Nipple
+  comment: A 12 mm brass spoke nipple. The wheel takes 32.
+  asm.partNumber: NIP-12-BR
+
+rim-tape:
+  type: asm.Component
+  label: Rim Tape
+  comment: A strip of high-pressure tape, 18 mm wide.
+  asm.partNumber: TAPE-18
+
+inner-tube:
+  type: asm.Component
+  label: Inner Tube
+  comment: A 700x25 inner tube with a 48 mm valve.
+  asm.partNumber: TUBE-700X25
+
+tire:
+  type: asm.Component
+  label: Tire
+  comment: A 700x25 folding clincher tire.
+  asm.partNumber: TIRE-700X25
+
+# Tools the steps use.
+
+nipple-driver:
+  type: asm.Tool
+  label: Nipple Driver
+  comment: A screwdriver-like crank that runs every nipple down to the same depth.
+
+spoke-wrench:
+  type: asm.Tool
+  label: Spoke Wrench
+  comment: A wrench that turns a nipple to tighten or loosen its spoke.
+
+truing-stand:
+  type: asm.Tool
+  label: Truing Stand
+  comment: A stand that holds the wheel by its axle, with gauges that show where the rim wanders.
+
+dishing-tool:
+  type: asm.Tool
+  label: Dishing Tool
+  comment: A bridge laid across the rim that shows whether it sits centered over the hub.
+
+tension-meter:
+  type: asm.Tool
+  label: Tension Meter
+  comment: A gauge that reads a spoke's tension from how far it deflects.
+
+tire-levers:
+  type: asm.Tool
+  label: Tire Levers
+  comment: Plastic levers that lift a tire's bead over the rim wall.
+
+floor-pump:
+  type: asm.Tool
+  label: Floor Pump
+  comment: A pump with a pressure gauge.

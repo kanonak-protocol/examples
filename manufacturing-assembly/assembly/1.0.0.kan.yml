@@ -1,0 +1,163 @@
+assembly:
+  type: Package
+  publisher: example.org
+  version: 1.0.0
+  label: Assembly
+  comment: >-
+    The schema for documenting how a product is assembled: the process, its
+    steps in order, the operation each step performs, the tools it needs and
+    the components it consumes. It describes processes; the processes
+    themselves are data, in packages that import this one.
+  imports:
+    - publisher: kanonak.org
+      packages:
+        - { package: core-kanonak, match: ^, version: 2.4.0 }
+        - { package: core-rdf,     match: ^, version: 1.2.0, alias: rdfs }
+        - { package: core-owl,     match: ^, version: 2.4.0, alias: owl }
+        - { package: core-xsd,     match: ^, version: 1.3.0, alias: xsd }
+        - { package: core-shacl,   match: ^, version: 1.8.0, alias: sh }
+
+Product:
+  type: rdfs.Class
+  label: Product
+  comment: Something an assembly process yields, such as a finished wheel or a sub-assembly.
+
+AssemblyProcess:
+  type: rdfs.Class
+  label: Assembly Process
+  comment: >-
+    A documented way of assembling one product: the steps that make it, and
+    the product they yield. Two ways of building the same product are two
+    processes.
+
+Step:
+  type: rdfs.Class
+  label: Step
+  comment: >-
+    One operation in an assembly process, done with the tools and components
+    it names. A step starts once every step that leads to it is done.
+
+Tool:
+  type: rdfs.Class
+  label: Tool
+  comment: An instrument or fixture a step needs, which the step uses but does not consume.
+
+Component:
+  type: rdfs.Class
+  label: Component
+  comment: A part or material a step consumes, which becomes part of the product.
+
+Operation:
+  type: rdfs.Class
+  owl.oneOf: [ fit, fasten, tension, adjust, inspect ]
+  label: Operation
+  comment: What a step does to the work, one of a fixed set.
+
+fit:
+  type: Operation
+  label: Fit
+  comment: Places one component on or in another.
+
+fasten:
+  type: Operation
+  label: Fasten
+  comment: Joins components so they stay together, by threading, pressing or clamping.
+
+tension:
+  type: Operation
+  label: Tension
+  comment: Brings a part to a working tension or torque.
+
+adjust:
+  type: Operation
+  label: Adjust
+  comment: Corrects the position or alignment of parts already joined.
+
+inspect:
+  type: Operation
+  label: Inspect
+  comment: Checks the work against a specification, changing nothing.
+
+produces:
+  type: owl.ObjectProperty
+  domain: AssemblyProcess
+  range: Product
+  label: Produces
+  comment: The product the process yields.
+
+hasStep:
+  type: owl.ObjectProperty
+  domain: AssemblyProcess
+  range: Step
+  label: Steps
+  comment: Every step of the process. Their order comes from each step's leadsTo.
+
+leadsTo:
+  type: owl.ObjectProperty
+  domain: Step
+  range: Step
+  label: Leads To
+  comment: >-
+    A step that can start once this one is done. A step that leads to two
+    others lets them happen in either order, or at once.
+
+performs:
+  type: owl.ObjectProperty
+  domain: Step
+  range: Operation
+  label: Performs
+  comment: The operation the step performs.
+
+usesTool:
+  type: owl.ObjectProperty
+  domain: Step
+  range: Tool
+  label: Uses Tool
+  comment: A tool the step needs.
+
+consumes:
+  type: owl.ObjectProperty
+  domain: Step
+  range: Component
+  label: Consumes
+  comment: A component the step uses up, which becomes part of the product.
+
+estimatedMinutes:
+  type: owl.DatatypeProperty
+  domain: Step
+  range: xsd.integer
+  label: Estimated Minutes
+  comment: How long the step takes a trained person, in whole minutes.
+
+partNumber:
+  type: owl.DatatypeProperty
+  domain: Component
+  range: xsd.string
+  label: Part Number
+  comment: The supplier's or the plant's own code for the component.
+
+assembly-process-shape:
+  type: sh.NodeShape
+  label: Assembly Process Shape
+  comment: Every process produces exactly one product, and has at least one step.
+  sh.targetClass: AssemblyProcess
+  sh.property:
+    - { sh.path: produces, sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: hasStep, sh.minCount: 1 }
+
+step-shape:
+  type: sh.NodeShape
+  label: Step Shape
+  comment: Every step performs exactly one operation, and takes at most one estimate of at least a minute.
+  sh.targetClass: Step
+  sh.property:
+    - { sh.path: performs, sh.minCount: 1, sh.maxCount: 1 }
+    - { sh.path: estimatedMinutes, sh.maxCount: 1, sh.minInclusive: 1 }
+
+component-shape:
+  type: sh.NodeShape
+  label: Component Shape
+  comment: A component has at most one part number.
+  sh.targetClass: Component
+  sh.property:
+    - { sh.path: partNumber, sh.maxCount: 1 }
